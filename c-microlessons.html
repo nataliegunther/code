@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive CS50 Plurality C Micro-Lessons</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices:
+        - Report Info: CS50 Plurality explanation and C programming micro-lessons.
+        - Overall Goal: Educate, Explain, Guide.
+        - Sections & Content:
+            - Introduction/Problem Deconstruction/Conclusion/Next Steps/References: Goal: Inform. Method: Formatted text. Interaction: Reading. Justification: Direct presentation of narrative content.
+            - Plurality Task/C Concept Table: Goal: Organize, Inform. Method: HTML Table. Interaction: Hover effects, potential links to lessons. Justification: Clear, structured data from report.
+            - Micro-Lessons (Loops, Structs, etc.): Goal: Explain. Method: Text, formatted C code snippets using <pre><code>, HTML tables for summaries. Interaction: Potential toggle for code output visibility. Justification: Clear presentation of technical details and examples.
+            - Illustrative Concept Chart (e.g., "Plurality Concepts Interconnection"): Goal: Visualize Relationships, Organize. Method: Chart.js (Bar Chart - conceptual). Interaction: Tooltips on hover. Justification: Provides a visual summary of how different C concepts (loops, structs, conditionals, functions) are used together in the Plurality problem, aiding understanding. This will be a simple chart representing, for example, the components of the `vote` or `print_winner` function. Library: Chart.js (Canvas).
+            - Step-by-step for `vote`/`print_winner`: Goal: Guide. Method: Text, pseudo-code. Interaction: Simple stepper UI (click to reveal next step). Justification: Makes the problem-solving logic easier to follow.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .nav-button {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #0D9488; /* teal-600 */
+            color: white;
+        }
+        .nav-button:hover:not(.active) {
+            background-color: #CCFBF1; /* teal-100 */
+        }
+        .code-block {
+            background-color: #1F2937; /* gray-800 */
+            color: #F3F4F6; /* gray-100 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.25rem; /* leading-5 */
+        }
+        .code-block code {
+            white-space: pre;
+        }
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-container th, .table-container td {
+            border: 1px solid #D1D5DB; /* gray-300 */
+            padding: 0.75rem; /* p-3 */
+            text-align: left;
+        }
+        .table-container th {
+            background-color: #F3F4F6; /* gray-100 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Example max-width */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Base height */
+            max-height: 400px; /* Max height */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .step-content { display: none; }
+        .step-content.active-step { display: block; }
+
+        /* Tooltip styles */
+        #reference-tooltip {
+            position: absolute;
+            background-color: #262626; /* neutral-800 */
+            color: #F3F4F6; /* gray-100 */
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            z-index: 100; /* Ensure it's above other content */
+            max-width: 24rem; /* max-w-sm */
+            font-size: 0.75rem; /* text-xs */
+            line-height: 1rem; /* leading-4 */
+            pointer-events: none; /* Allows clicks to pass through to elements behind it */
+            opacity: 0;
+            transition: opacity 0.15s ease-in-out;
+        }
+        #reference-tooltip.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-800">
+
+    <header class="bg-teal-700 text-white p-6 shadow-md">
+        <div class="container mx-auto">
+            <h1 class="text-3xl font-bold">Interactive CS50 Plurality C Micro-Lessons</h1>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-center items-center space-x-2 py-3">
+                <button class="nav-button px-4 py-2 rounded-md text-sm font-medium" data-target="intro">Introduction</button>
+                <button class="nav-button px-4 py-2 rounded-md text-sm font-medium" data-target="plurality-problem">Plurality Problem</button>
+                <button class="nav-button px-4 py-2 rounded-md text-sm font-medium" data-target="c-concepts">C Concepts</button>
+                <button class="nav-button px-4 py-2 rounded-md text-sm font-medium" data-target="concept-chart">Concept Chart</button>
+                <button class="nav-button px-4 py-2 rounded-md text-sm font-medium" data-target="solving-plurality">Solving Plurality</button>
+                <button class="nav-button px-4 py-2 rounded-md text-sm font-medium" data-target="beyond-plurality">Beyond Plurality</button>
+                <button class="nav-button px-4 py-2 rounded-md text-sm font-medium" data-target="conclusion">Conclusion</button>
+                <button class="nav-button px-4 py-2 rounded-md text-sm font-medium" data-target="references">References</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <section id="intro" class="content-section space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-teal-600 border-b pb-2">Introduction: Accelerating Your CS50 Journey</h2>
+            <p class="text-lg leading-relaxed">Welcome to this interactive guide designed to help you master the C fundamentals crucial for CS50, especially for assignments like Plurality. This application breaks down complex topics into digestible "micro-lessons." The goal is not just to complete assignments, but to build a solid understanding of C programming that will serve you well in your coding journey.</p>
+            <p>The journey through CS50 can present significant challenges, particularly when grappling with foundational concepts in C programming. It is a common experience to encounter difficulties in maintaining pace or fully grasping new ideas, especially when moving into assignments like Plurality. This struggle is not indicative of a lack of ability but rather a natural and valuable part of the learning process, signaling active engagement with complex material. The objective of this application is to provide a structured approach to overcoming these hurdles, focusing not merely on completing the Plurality assignment but on building a robust understanding of the underlying C fundamentals that will serve as a bedrock for continued programming development.</p>
+            <p>This application delivers focused, digestible "micro lessons," each designed for efficient study sessions. These lessons delve into core C programming concepts, including loops, structures, arrays of structures, conditional statements, and functions. The content is specifically tailored to address the challenges frequently encountered in CS50 Week 3 and the Plurality problem set, ensuring immediate practical applicability. The aim is to equip learners with the conceptual tools and problem-solving methodologies necessary to approach and solve the assignment independently, thereby fostering genuine programming proficiency.</p>
+        </section>
+
+        <section id="plurality-problem" class="content-section space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-teal-600 border-b pb-2">Deconstructing CS50 Plurality: The Core Challenge</h2>
+            <p class="text-lg leading-relaxed">This section breaks down the CS50 Plurality problem. Understanding the problem requirements, the provided code structure, and the specific functions you need to implement is the first step towards a successful solution. We'll explore the `plurality.c` file, the `candidate` struct, and the roles of the `vote` and `print_winner` functions.</p>
+            <p>The CS50 Plurality problem requires the implementation of a program that simulates a plurality election, also known as "first-past-the-post" or "winner take all". In this electoral system, each voter casts a single vote for one candidate. Upon the conclusion of the election, the candidate who has accumulated the greatest number of votes is declared the winner. The program's operational flow involves several stages: it accepts candidate names as command-line arguments, prompts the user for the total number of voters, systematically collects each vote, and ultimately identifies and prints the winner or winners of the election.</p>
+            <p>The <code>plurality.c</code> file, provided as part of the assignment, includes several predefined components crucial for the election simulation. A preprocessor directive, <code>#define MAX 9</code>, establishes a constant value, <code>MAX</code>, equal to 9. This constant represents the maximum number of candidates that an election can accommodate, which is vital for appropriately sizing data structures within the program. Central to the program's data organization is the <code>struct candidate</code> definition. This structure is defined as <code>struct candidate { string name; int votes; };</code>, effectively grouping a candidate's name (represented as a string) and their accumulated vote count (an integer) into a single, cohesive logical unit. A global array of these <code>candidate</code> structures, named <code>candidates</code>, is also provided, serving as the primary repository for all participating candidates in the election.</p>
+            <p>The assignment specifically tasks the implementer with completing two functions: <code>vote</code> and <code>print_winner</code>. The <code>vote</code> function is designed to accept a single argument, <code>string name</code>, which represents the name of the candidate for whom a vote is cast. The function's responsibility is to search for a matching candidate within the <code>candidates</code> array. If a match is found, the corresponding candidate's vote total must be incremented, and the function should return <code>true</code> to signify a successful ballot. Conversely, if the provided <code>name</code> does not correspond to any candidate in the election, no vote totals should be altered, and the function must return <code>false</code> to indicate an invalid ballot. The <code>print_winner</code> function is charged with identifying the candidate or candidates who have received the highest number of votes. In scenarios where multiple candidates achieve the maximum vote count (a tie), the function must print the names of all such winning candidates, each on a separate line. A critical constraint of this assignment is that only the implementations of the <code>vote</code> and <code>print_winner</code> functions are to be modified; no other parts of <code>plurality.c</code> should be altered, aside from potentially including additional header files. This constraint directs the focus of implementation to specific areas where C fundamentals are applied.</p>
+            <p>The Plurality assignment serves as a comprehensive integration point for the C concepts that are often challenging for new learners. The problem's inherent structure necessitates the application of loops, structures, and arrays of structures. For example, the explicit definition of <code>struct candidate</code> and the global array of <code>candidates</code> directly correspond to the concepts of structures and arrays of structures. Furthermore, the requirements for both the <code>vote</code> and <code>print_winner</code> functions involve iterating through data and making decisions based on that data, which inherently demands the use of loops and conditional logic. The <code>vote</code> function, in particular, requires string comparison, a specific technique in C. Therefore, by focusing on solving Plurality, a learner is not merely completing a programming task but actively applying and solidifying their understanding of all the C fundamentals from Weeks 1-3 within a practical and interconnected context. This transforms the problem from a mere hurdle into a comprehensive learning exercise.</p>
+            <p>The implementation of the <code>vote</code> function illustrates a critical synergy between multiple C programming concepts. To correctly implement <code>vote</code>, one must iterate through the <code>candidates</code> array, which is itself an array of <code>structs</code>. This immediately links the concept of loops (for iteration) with arrays of structures (the data structure being iterated over). Within this iteration, to identify the correct candidate, a comparison of names is essential. This requires the use of conditional logic, typically an <code>if</code> statement, combined with a specific C function for string comparison, <code>strcmp()</code>. Once a match is identified, the candidate's vote count must be updated, which is achieved through structure member access using the dot operator (e.g., <code>candidates[i].votes++</code>). This step-by-step breakdown demonstrates a causal relationship among these elements: structures define the shape of the data, arrays hold collections of that data, loops enable efficient processing of the collection, and conditionals make decisions based on the processed data. The problem cannot be solved effectively by understanding these concepts in isolation; their effective combination is key to successful implementation.</p>
+            <h3 class="text-xl font-medium text-teal-600 mt-4">Plurality Task to C Concept Mapping</h3>
+            <div class="table-container my-4 overflow-x-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plurality Task/Requirement</th>
+                            <th>Core C Concept(s) Involved</th>
+                            <th>Specific C Elements/Techniques</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Representing candidates (name, votes)</td>
+                            <td>Structures</td>
+                            <td><code>struct candidate { string name; int votes; };</code></td>
+                        </tr>
+                        <tr>
+                            <td>Storing multiple candidates</td>
+                            <td>Arrays of Structures</td>
+                            <td><code>candidate candidates[MAX];</code></td>
+                        </tr>
+                        <tr>
+                            <td>Processing each voter's ballot</td>
+                            <td>Loops</td>
+                            <td><code>for</code> loop, <code>while</code> loop <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a></td>
+                        </tr>
+                        <tr>
+                            <td>Validating a vote (matching name)</td>
+                            <td>Conditional Logic, String Comparison</td>
+                            <td><code>if</code>, <code>else if</code>, <code>strcmp()</code> <a href="#ref-1" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-1"><sup>[1]</sup></a><a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a><a href="#ref-5" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-5"><sup>[5]</sup></a><a href="#ref-6" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-6"><sup>[6]</sup></a></td>
+                        </tr>
+                        <tr>
+                            <td>Updating a candidate's vote count</td>
+                            <td>Structure Member Access</td>
+                            <td><code>candidates[i].votes++</code> <a href="#ref-1" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-1"><sup>[1]</sup></a><a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a></td>
+                        </tr>
+                        <tr>
+                            <td>Finding the winning candidate(s)</td>
+                            <td>Loops, Conditional Logic</td>
+                            <td><code>for</code> loop, <code>if</code>, <code>else if</code>, finding maximum value <a href="#ref-1" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-1"><sup>[1]</sup></a><a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a></td>
+                        </tr>
+                        <tr>
+                            <td>Printing multiple winners in case of a tie</td>
+                            <td>Loops, Conditional Logic</td>
+                            <td><code>for</code> loop, <code>if</code> <a href="#ref-1" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-1"><sup>[1]</sup></a><a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a></td>
+                        </tr>
+                        <tr>
+                            <td>Organizing <code>vote</code> and <code>print_winner</code> logic</td>
+                            <td>Functions</td>
+                            <td>Function definition, parameters, return types <a href="#ref-1" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-1"><sup>[1]</sup></a><a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="c-concepts" class="content-section space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-teal-600 border-b pb-2">Core C Concepts: Micro-Lessons</h2>
+            <p class="text-lg leading-relaxed">This area dives into the fundamental C programming concepts you'll need for Plurality and beyond. Each micro-lesson focuses on a specific topic, providing explanations, examples, and their relevance to the assignment. Use the buttons below to navigate to each lesson.</p>
+            <div class="flex flex-wrap gap-2 my-4">
+                <button class="sub-nav-button bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium" data-target="lesson-loops">Loops</button>
+                <button class="sub-nav-button bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium" data-target="lesson-structs">Structures</button>
+                <button class="sub-nav-button bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium" data-target="lesson-arrays-structs">Arrays of Structures</button>
+                <button class="sub-nav-button bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium" data-target="lesson-conditionals">Conditional Logic</button>
+                <button class="sub-nav-button bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium" data-target="lesson-functions">Functions</button>
+            </div>
+
+            <article id="lesson-loops" class="lesson-content hidden space-y-4 pt-4 border-t border-gray-200">
+                <h3 class="text-xl font-medium text-teal-600">Micro Lesson 1: Loops in C - Mastering Repetition</h3>
+                <p>Loops are fundamental control structures in C that enable a block of code to be executed repeatedly.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a> This automation is critical for tasks involving the processing of data collections, eliminating the need for redundant code, and ensuring programs are scalable.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a> C offers three primary types of loops: <code>for</code>, <code>while</code>, and <code>do-while</code>, each designed for distinct scenarios.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a></p>
+                <p>The user's challenge with maintaining pace and solving programming problems often stems from a difficulty in efficiently handling repetitive operations. Loops directly address this by serving as the engine for data processing. The Plurality assignment, for instance, requires processing a variable <code>candidate_count</code> of candidates and a <code>number of voters</code>. Manually writing code for each candidate or voter would be impractical and inefficient. Loops provide the necessary automation and scalability to handle varying numbers of inputs.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a> For example, a common error observed in attempts to implement the <code>vote()</code> function is that the loop runs only once due to incorrect logic.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a> This highlights that loops are not merely a syntactic feature but a core algorithmic necessity for correct and efficient problem-solving. A misunderstanding of loop mechanics, such as premature returns, can derail the program's logic entirely.</p>
+                <h4 class="text-lg font-medium">Understanding <code>for</code> Loops</h4>
+                <p>The <code>for</code> loop is typically employed when the number of iterations is known beforehand.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a> Its syntax integrates initialization, condition-checking, and increment/decrement into a single line, making it concise and suitable for tasks like counting or iterating over arrays.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a></p>
+                <p>The basic syntax for a <code>for</code> loop is: <code>for (initializationStatement; testExpression; updateStatement) { // statements inside the body of loop }</code>.<a href="#ref-8" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-8"><sup>[8]</sup></a><a href="#ref-9" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-9"><sup>[9]</sup></a><a href="#ref-10" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-10"><sup>[10]</sup></a></p>
+                <ul>
+                    <li><strong>Initialization:</strong> This step is executed only once at the very beginning of the loop. It is typically used to declare and initialize a loop control variable, for instance, <code>int i = 0</code>.<a href="#ref-8" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-8"><sup>[8]</sup></a><a href="#ref-10" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-10"><sup>[10]</sup></a></li>
+                    <li><strong>Condition:</strong> This is a logical expression that is evaluated before each iteration. If the <code>testExpression</code> evaluates to <code>true</code> (non-zero), the loop body executes. If it evaluates to <code>false</code> (zero), the loop terminates.<a href="#ref-8" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-8"><sup>[8]</sup></a><a href="#ref-10" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-10"><sup>[10]</sup></a></li>
+                    <li><strong>Increment/Decrement:</strong> This statement updates the loop control variable after each iteration of the loop body. Its purpose is to ensure that the loop progresses towards its termination condition.<a href="#ref-8" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-8"><sup>[8]</sup></a><a href="#ref-10" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-10"><sup>[10]</sup></a></li>
+                </ul>
+                <p>The <code>for</code> loop operates in a sequential manner: first, the initialization statement is executed once. Then, the <code>testExpression</code> is evaluated. If true, the statements within the loop body are executed, followed by the execution of the <code>updateStatement</code>. This cycle of condition evaluation, body execution, and update continues until the <code>testExpression</code> becomes false.<a href="#ref-9" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-9"><sup>[9]</sup></a><a href="#ref-10" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-10"><sup>[10]</sup></a></p>
+                <p>A common practical application of the <code>for</code> loop is iterating through an array. For example, to print elements of an integer array:</p>
+                <div class="code-block"><code>#include &lt;stdio.h&gt;
+int main() {
+    int arr[] = {10, 20, 30, 40, 50}; // Corrected array declaration
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n"); // Added for better output formatting
+    return 0;
+}
+// Output: 10 20 30 40 50 </code></div>
+                <p>In this example, the loop variable <code>i</code> serves as an index to access each element of the array sequentially.<a href="#ref-8" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-8"><sup>[8]</sup></a><a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a> This direct application is highly relevant to processing the <code>candidates</code> array in the Plurality assignment.</p>
+                <h4 class="text-lg font-medium">Understanding <code>while</code> Loops</h4>
+                <p>The <code>while</code> loop is used when the exact number of iterations is not known beforehand and depends on a condition being true.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a> It is an entry-controlled loop, meaning the condition is checked *before* the loop body executes.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a><a href="#ref-12" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-12"><sup>[12]</sup></a> If the condition is initially false, the loop body will not execute even once.<a href="#ref-12" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-12"><sup>[12]</sup></a></p>
+                <p>The basic syntax for a <code>while</code> loop is: <code>while (condition) { // body; updation; }</code>.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-12" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-12"><sup>[12]</sup></a> Initialization of the loop variable typically occurs *before* the <code>while</code> loop, and the update statement must be explicitly included *within* the loop body to ensure the condition eventually becomes false and the loop terminates.<a href="#ref-12" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-12"><sup>[12]</sup></a></p>
+                <p>The <code>while</code> loop operates by first evaluating its condition. If the condition is true, the loop body executes. After the body executes, program control returns to the start, and the condition is re-evaluated. This process continues as long as the condition remains true.<a href="#ref-12" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-12"><sup>[12]</sup></a> <code>while</code> loops are ideal for scenarios where the loop needs to continue until a certain external condition is met, such as continually reading user input until a valid number is entered.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a></p>
+                 <div class="code-block"><code>#include &lt;stdio.h&gt;
+int main() {
+    int i = 1;
+    while (i <= 5) {
+        printf("GfG\n");
+        i++;
+    }
+    return 0;
+}
+// Output: GfG GfG GfG GfG GfG</code></div>
+                <p>This example demonstrates how the loop continues as long as <code>i</code> is less than or equal to 5, printing "GfG" in each iteration and incrementing <code>i</code>.<a href="#ref-12" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-12"><sup>[12]</sup></a></p>
+                <h4 class="text-lg font-medium"><code>do-while</code> Loops: The "At Least Once" Guarantee</h4>
+                <p>The <code>do-while</code> loop is similar to a <code>while</code> loop, but its key distinguishing feature is that the loop body executes *at least once* before the condition is checked.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a> This makes it an exit-controlled or post-tested loop.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a> Even if the condition is initially false, the code inside the <code>do</code> block will execute one time.<a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a></p>
+                <p>The syntax for a <code>do-while</code> loop is: <code>do { // body; updation; } while (condition);</code>.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a> It is important to note the semicolon at the end of the <code>while</code> statement, which is unique to <code>do-while</code> loops.<a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a></p>
+                <p>The <code>do-while</code> loop first executes the code block within the <code>do</code> part. After this initial execution, the condition in the <code>while</code> part is evaluated. If the condition is true, the loop repeats. This process continues until the condition evaluates to false, at which point the loop terminates.<a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a> This type of loop is particularly useful for scenarios where an action must occur at least once, such as displaying a menu to a user or ensuring initial input is received before validation.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a></p>
+                <div class="code-block"><code>#include &lt;stdio.h&gt;
+#include &lt;stdbool.h&gt; 
+int main() {
+    bool c = false;
+    do {
+        printf("This is loop body.\n");
+    } while (c);
+    return 0;
+}
+// Output: This is loop body.</code></div>
+                <p>Even though <code>c</code> is initially false, the <code>printf</code> statement inside the <code>do</code> block executes once before the condition is checked and the loop terminates.<a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a></p>
+                <h4 class="text-lg font-medium">Nested Loops</h4>
+                <p>Nested loops involve placing one loop inside another. The inner loop executes completely for every single iteration of the outer loop.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a><a href="#ref-10" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-10"><sup>[10]</sup></a> This structure is powerful for handling multi-dimensional data or tasks that require layered repetition.</p>
+                <p>This concept is vital for the <code>print_winner</code> function in Plurality. As suggested by external resources, it is often necessary to use two separate passes (which can be implemented with two loops) to determine the winner(s).<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a> The first loop can be used to find the maximum vote count among all candidates. Once the maximum is known, a second loop can iterate through the candidates again to print the names of all candidates who achieved that maximum score, thereby correctly handling potential ties.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a></p>
+                <div class="table-container my-4 overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Loop Type</th>
+                                <th>Syntax (Basic)</th>
+                                <th>When to Use</th>
+                                <th>Key Characteristic</th>
+                                <th>Plurality Relevance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>for</code></td>
+                                <td><code>for (init; cond; update) {... }</code></td>
+                                <td>When number of iterations is known beforehand <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a></td>
+                                <td>Entry-controlled, concise <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a></td>
+                                <td>Iterating through <code>candidates</code> array in <code>vote</code> and <code>print_winner</code> <a href="#ref-1" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-1"><sup>[1]</sup></a><a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a></td>
+                            </tr>
+                            <tr>
+                                <td><code>while</code></td>
+                                <td><code>while (condition) {... }</code></td>
+                                <td>When number of iterations is not fixed and depends on a condition <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a></td>
+                                <td>Entry-controlled <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a><a href="#ref-12" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-12"><sup>[12]</sup></a></td>
+                                <td>Less direct for Plurality's core functions, but useful for general input validation loops outside the provided functions.</td>
+                            </tr>
+                            <tr>
+                                <td><code>do-while</code></td>
+                                <td><code>do {... } while (condition);</code></td>
+                                <td>When the loop body must execute at least once before checking the condition <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a></td>
+                                <td>Exit-controlled <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a><a href="#ref-14" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-14"><sup>[14]</sup></a></td>
+                                <td>Less direct for Plurality's core functions, but useful for scenarios requiring initial execution (e.g., displaying a menu).</td>
+                            </tr>
+                             <tr>
+                                <td>Nested Loops</td>
+                                <td><code>for (...) { for (...) {... } }</code></td>
+                                <td>For complex operations requiring multiple levels of iteration <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-3" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-3"><sup>[3]</sup></a><a href="#ref-10" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-10"><sup>[10]</sup></a></td>
+                                <td>Inner loop completes for each outer loop iteration <a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a></td>
+                                <td>Crucial for <code>print_winner</code> to first find the maximum votes, then iterate again to print all winners.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>While <code>for</code> loops are frequently chosen for iterating through known collections like the <code>candidates</code> array, understanding <code>while</code> and <code>do-while</code> loops is crucial for designing robust programs that can handle diverse input scenarios.<a href="#ref-2" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-2"><sup>[2]</sup></a><a href="#ref-13" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-13"><sup>[13]</sup></a> For instance, if the Plurality assignment required repeatedly asking for user input *until* a valid vote was entered, a <code>do-while</code> loop might be more appropriate than a <code>for</code> loop, as it guarantees the prompt appears at least once. This understanding helps a programmer move beyond rote memorization of syntax to a deeper comprehension of *when* to apply each tool, fostering better design choices and more resilient code. A learner's struggle may indicate they are applying the wrong loop type or mismanaging loop conditions, leading to incorrect or inefficient code, and grasping the nuances of each loop type is key to overcoming this.</p>
+            </article>
+
+            <article id="lesson-structs" class="lesson-content hidden space-y-4 pt-4 border-t border-gray-200">
+                <h3 class="text-xl font-medium text-teal-600">Micro Lesson 2: Structures in C - Organizing Your Data</h3>
+                <p>A <code>struct</code> (short for structure) in C is a powerful user-defined data type that enables the grouping of variables of *different* data types under a single, meaningful name.<a href="#ref-15" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-15"><sup>[15]</sup></a><a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a> This contrasts with arrays, which are collections of elements of the *same* data type.<a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-15" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-15"><sup>[15]</sup></a> Structures are fundamental for modeling complex, real-world entities within a program, such as a <code>candidate</code> in an election.</p>
+                <p>The general syntax for defining a <code>struct</code> is:</p>
+                <div class="code-block"><code>struct structure_name {
+    data_type1 member1;
+    data_type2 member2;
+    //... more members
+}; // Don't forget the semicolon!</code></div>
+                <p>It is crucial to understand that defining a <code>struct</code> does not allocate any memory; it merely creates a blueprint or template for a new data type.<a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a> Memory is only allocated when a variable of that <code>struct</code> type is declared.</p>
+                <p>To declare a variable of a defined <code>struct</code> type, the syntax is: <code>struct structure_name var_name;</code>.<a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a> Variables can also be declared directly after the <code>struct</code> definition.<a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a></p>
+                <p>To interact with individual data items (members) within a declared <code>struct</code> variable, the <code>.</code> (dot) operator is used.<a href="#ref-15" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-15"><sup>[15]</sup></a><a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a><a href="#ref-17" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-17"><sup>[17]</sup></a> The syntax for accessing a member is <code>struct_variable.member_name;</code>.<a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a> For instance, if a <code>struct Player</code> is defined with <code>name</code> and <code>score</code> members, <code>player1.name</code> and <code>player1.score</code> would be used to access or modify those specific members for a <code>player1</code> variable.<a href="#ref-15" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-15"><sup>[15]</sup></a></p>
+                <p>In <code>plurality.c</code>: <code>struct candidate { string name; int votes; };</code>. If <code>alice</code> is a <code>candidate</code>, <code>alice.name</code> and <code>alice.votes</code> access her data.</p>
+                 <div class="code-block"><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt; // Required for strcpy
+
+// It's good practice to define structs globally or in a header if used by multiple functions
+struct Player {
+    char name[50]; // Character array for name
+    int score;
+};
+
+int main() {
+    struct Player player1; // Declare a Player variable
+
+    // Initialize members
+    strcpy(player1.name, "Alice"); // Use strcpy for string assignment
+    player1.score = 100;
+
+    printf("Player Name: %s\n", player1.name);
+    printf("Player Score: %d\n", player1.score);
+
+    return 0;
+}
+// Output:
+// Player Name: Alice
+// Player Score: 100</code></div>
+                <p>The ability to organize related, disparate data types under a single, meaningful name (<code>candidate</code>) is a crucial step in translating real-world problems into structured code. This fosters better data organization and makes the code more readable and maintainable. Without structures, one might attempt to manage candidate names in one array and votes in another, relying on parallel indices, which is prone to errors and less intuitive.</p>
+                <p>While conceptually straightforward, the <code>.</code> (dot) operator is the critical syntactic mechanism for interacting with the data encapsulated within a <code>struct</code>.<a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a> The ability to correctly access and increment <code>candidates[i].votes</code> is fundamental for the <code>vote()</code> function.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a> Without a clear understanding of how to use the dot operator, a programmer cannot access or modify the <code>name</code> or <code>votes</code> members of a <code>candidate</code> struct, directly impeding the implementation of the core logic for <code>vote</code> and <code>print_winner</code>. This highlights that even seemingly small syntactic details are crucial for successful program implementation.</p>
+            </article>
+
+            <article id="lesson-arrays-structs" class="lesson-content hidden space-y-4 pt-4 border-t border-gray-200">
+                <h3 class="text-xl font-medium text-teal-600">Micro Lesson 3: Arrays of Structures - Managing Collections</h3>
+                <p>While a single <code>struct</code> variable holds data for a *single* entity, an array of structures enables the management of *multiple* entities that share the same underlying structure.<a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a> This can be conceptualized as a list or table where each row represents a <code>struct</code> instance, such as a list of students or, in the context of Plurality, a list of candidates.<a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a></p>
+                <p>The syntax for declaring an array of structs is: <code>struct StructName arrayName;</code>.<a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a> For example, <code>struct Student students;</code> declares an array named <code>students</code> where each element <code>students[i]</code> is a <code>Student</code> struct.<a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a></p>
+                <p>Arrays of structs can be initialized in several ways:</p>
+                <ul>
+                    <li><strong>Static Initialization (at Declaration):</strong> Values can be assigned directly when the array is declared using nested curly braces, where each inner brace corresponds to a <code>struct</code> element.<a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a><a href="#ref-19" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-19"><sup>[19]</sup></a></li>
+                </ul>
+                <div class="code-block"><code>#include &lt;stdio.h&gt;
+struct Student {
+    int rollNo;
+    char name[50]; // Corrected to char array for string
+    float marks;
+};
+int main() {
+    struct Student students[] = { // Corrected to array initialization
+        {101, "Rahul", 89.5},
+        {102, "Sneha", 92.0},
+        {103, "Aman", 78.5}
+    };
+    printf("Name: %s, Marks: %.2f\n", students[1].name, students[1].marks); // Accessing an element
+    return 0;
+}
+// Output: Name: Sneha, Marks: 92.00
+</code></div>
+                <ul>
+                    <li><strong>Dynamic Initialization (Using User Input/Loops):</strong> In many practical scenarios, such as the Plurality assignment where candidate names are provided as command-line arguments and votes are user input, the array of structs is populated during program execution using loops and input functions like <code>scanf</code>.<a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a></li>
+                </ul>
+                <p>A critical consideration when working with <code>char</code> arrays (strings) within structs is that direct assignment using the <code>=</code> operator is not permissible *after* the struct variable has been declared.<a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a><a href="#ref-19" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-19"><sup>[19]</sup></a> Instead, the <code>strcpy()</code> function (or <code>strncpy()</code> for safer string handling) must be employed. For example: <code>strcpy(students[i].name, "Alice");</code>.</p>
+                <p>To efficiently process data within an array of structs, combining loops with the dot operator is the standard approach.<a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a> The syntax for accessing a member within an array of structs is <code>arrayName[index].member_name;</code>. A <code>for</code> loop can iterate through an array of <code>Student</code> structs to print each student's details:</p>
+                <div class="code-block"><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt; // For strcpy
+
+struct Student {
+    char name[50];
+    int roll;
+    float marks;
+};
+
+int main() {
+    struct Student students[3]; // Array of 3 Student structs
+
+    // Initialize the first student
+    strcpy(students[0].name, "John");
+    students[0].roll = 1;
+    students[0].marks = 85.5;
+
+    // Initialize the second student
+    strcpy(students[1].name, "Emma");
+    students[1].roll = 2;
+    students[1].marks = 90.6;
+
+    // Initialize the third student
+    strcpy(students[2].name, "Harry");
+    students[2].roll = 3;
+    students[2].marks = 92.7;
+
+    printf("Students:\n");
+    for (int i = 0; i < 3; i++) {
+        printf("Name: %s, Roll: %d, Marks: %.2f\n",
+               students[i].name, students[i].roll, students[i].marks);
+    }
+    return 0;
+}
+/* Output:
+Students:
+Name: John, Roll: 1, Marks: 85.50
+Name: Emma, Roll: 2, Marks: 90.60
+Name: Harry, Roll: 3, Marks: 92.70
+*/</code></div>
+                <p>This demonstrates how the loop variable <code>i</code> is used as an index to access each <code>Student</code> struct within the <code>students</code> array, and then the dot operator is used to access individual members like <code>name</code>, <code>roll</code>, and <code>marks</code> for each student.<a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a></p>
+                <p>In the context of Plurality, the <code>global array of candidates</code>  is a direct application of an array of structures. The <code>vote</code> function will utilize a loop to iterate through this <code>candidates</code> array to find a matching name, while the <code>print_winner</code> function will employ loops to determine the maximum vote count and then identify all candidates who achieved that maximum within this array.</p>
+                <p>The need to manage multiple candidates in the Plurality election  makes arrays of structs the only practical and scalable solution for handling a collection of candidates up to <code>MAX</code>.<a href="#ref-1" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-1"><sup>[1]</sup></a><a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a> If individual <code>struct</code> variables were used (e.g., <code>candidate1</code>, <code>candidate2</code>), the code would become unmanageable and unscalable as the number of candidates increases. An array of structs provides a single, organized variable to hold all candidate data, making it straightforward to access them via an index. This is a crucial step in building programs that can handle varying amounts of input data efficiently, a core principle of good software design.</p>
+                <p>The most common and essential operation on an array of structs is iterating through it with a loop to access and manipulate individual <code>struct</code> members.<a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a> This represents a powerful synergy between "Loops" and "Structures." The <code>vote</code> function  needs to check every candidate's name to find a match, and the <code>print_winner</code> function  needs to examine every candidate's vote count. An array of structs provides the structured collection of data, and loops provide the efficient mechanism to traverse and process each element within that collection. Without this synergy, processing the election data would be impossible or incredibly cumbersome. The external guidance for <code>vote()</code> about needing to test "each candidate name" <a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a> directly implies the necessity of this loop-struct synergy for correct implementation.</p>
+                <div class="table-container my-4 overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th><code>struct</code> (Single Variable)</th>
+                                <th>Array of <code>structs</code></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Definition</strong></td>
+                                <td>User-defined data type grouping related variables of different types <a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a></td>
+                                <td>Collection of <code>struct</code> variables of the same type <a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Purpose</strong></td>
+                                <td>To represent a single entity (e.g., one candidate, one student)</td>
+                                <td>To manage multiple records of the same type (e.g., all candidates in an election, a list of students) <a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a></td>
+                            </tr>
+                             <tr>
+                                <td><strong>Declaration</strong></td>
+                                <td><code>struct MyStruct myVar;</code></td>
+                                <td><code>struct MyStruct myArr[size];</code> <a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Member Access</strong></td>
+                                <td><code>myVar.member;</code> (Dot operator) <a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a></td>
+                                <td><code>myArr[index].member;</code> (Array indexing + Dot operator) <a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Initialization</strong></td>
+                                <td>Direct <code>{}</code> initialization during declaration, or assignment after declaration <a href="#ref-16" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-16"><sup>[16]</sup></a><a href="#ref-19" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-19"><sup>[19]</sup></a></td>
+                                <td>Nested <code>{}</code> initialization during declaration, or using loops with input/assignment <a href="#ref-11" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-11"><sup>[11]</sup></a><a href="#ref-18" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-18"><sup>[18]</sup></a><a href="#ref-19" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-19"><sup>[19]</sup></a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Use Case Example</strong></td>
+                                <td>Details of *one* specific book (title, author, ISBN)</td>
+                                <td>A library's catalog of *all* books</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Plurality Example</strong></td>
+                                <td>A single <code>candidate</code>'s data (e.g., <code>Alice</code>'s name and votes)</td>
+                                <td>The <code>candidates</code> array holding data for <code>Alice</code>, <code>Bob</code>, <code>Charlie</code>, etc.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+            <article id="lesson-conditionals" class="lesson-content hidden space-y-4 pt-4 border-t border-gray-200">
+                <h3 class="text-xl font-medium text-teal-600">Micro Lesson 4: Conditional Logic - Making Decisions</h3>
+                <p>Conditional statements are fundamental control structures that empower a program to make decisions, executing one block of code if a specified condition is true, and a different block if the condition is false.<a href="#ref-6" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-6"><sup>[6]</sup></a> This capability allows programs to respond dynamically to varying inputs or states.</p>
+                <h4 class="text-lg font-medium"><code>if-else</code> Statements for Binary Choices</h4>
+                <p>The <code>if-else</code> statement is used for binary choices, where a program needs to choose between two possible paths of execution.</p>
+                <p>The syntax for <code>if-else</code> is:</p>
+                <div class="code-block"><code>if (condition) {
+    // Code to execute if condition is true
+} else {
+    // Code to execute if condition is false
+}</code></div>
+                <p>The <code>condition</code> is evaluated first. If it is non-zero or non-null, it is considered <code>true</code>, and the code within the <code>if</code> block is executed, while the <code>else</code> block is skipped. If the <code>condition</code> evaluates to zero or null (considered <code>false</code>), the code within the <code>else</code> block is executed.<a href="#ref-6" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-6"><sup>[6]</sup></a></p>
+                <p>For example, to check if a number is greater than 5:</p>
+                <div class="code-block"><code>#include &lt;stdio.h&gt;
+int main() {
+    int n = 10;
+    if (n > 5) {
+        printf("%d is greater than 5\n", n);
+    } else {
+        printf("%d is less than or equal to 5\n", n);
+    }
+    return 0;
+}
+// Output: 10 is greater than 5</code></div>
+                <p>Here, since <code>n</code> (10) is indeed greater than 5, the <code>if</code> block executes.<a href="#ref-6" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-6"><sup>[6]</sup></a></p>
+                <h4 class="text-lg font-medium"><code>if-else if</code> Ladders for Multiple Conditions</h4>
+                <p>When a program needs to check multiple conditions sequentially, the <code>if-else if</code> ladder is employed. This structure extends the basic <code>if-else</code> by allowing a series of conditions to be tested. The program proceeds down the "ladder," checking each condition in order. The first condition that evaluates to true will have its corresponding block of code executed, after which the entire <code>if-else if</code> structure is exited. If none of the <code>if</code> or <code>else if</code> conditions are true, the final <code>else</code> block (if present) is executed.</p>
+                <p>The syntax for an <code>if-else if</code> ladder is:</p>
+                <div class="code-block"><code>if (condition1) {
+    // Code if condition1 is true
+} else if (condition2) {
+    // Code if condition2 is true
+} else if (condition3) {
+    // Code if condition3 is true
+} else {
+    // Code if all conditions are false
+}</code></div>
+                <p>Only one block of code within the entire ladder will execute.</p>
+                <p>An example of evaluating a number against multiple specific values:</p>
+                <div class="code-block"><code>#include &lt;stdio.h&gt;
+int main(){
+    int number = 5;
+    if (number == 20) {
+        printf("number is equal to 20\n");
+    } else if (number == 50) {
+        printf("number is equal to 50\n");
+    } else if (number == 100) {
+        printf("number is equal to 100\n");
+    } else {
+        printf("number is not equal to 20, 50 or 100\n");
+    }
+    return 0;
+}
+// Output: number is not equal to 20, 50 or 100</code></div>
+                <p>In this case, since <code>number</code> is 5, none of the <code>if</code> or <code>else if</code> conditions are met, leading to the execution of the final <code>else</code> block.</p>
+                <h4 class="text-lg font-medium">Using Logical Operators (<code>&&</code>, <code>||</code>) for Complex Conditions</h4>
+                <p>Logical operators allow the combination of multiple conditions within a single <code>if</code> or <code>else if</code> statement, enabling more sophisticated decision-making logic.<a href="#ref-5" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-5"><sup>[5]</sup></a><a href="#ref-6" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-6"><sup>[6]</sup></a></p>
+                <ul>
+                    <li><code>&&</code> (Logical AND): The combined condition is <code>true</code> only if both conditions on its left and right sides are <code>true</code>.</li>
+                    <li><code>||</code> (Logical OR): The combined condition is <code>true</code> if at least one of the conditions on its left or right side is <code>true</code>.</li>
+                </ul>
+                <p>For example, to check if a number is both positive AND even:</p>
+                <div class="code-block"><code>#include &lt;stdio.h&gt;
+int main() {
+    int No = 10;
+    if (No > 0 && No % 2 == 0) {
+        printf("Number is positive and even\n");
+    } else if (No > 0 && No % 2!= 0) {
+        printf("Number is positive and odd\n");
+    } else if (No < 0) {
+        printf("Number is negative\n");
+    } else {
+        printf("Number is zero\n");
+    }
+    return 0;
+}
+// Output: Number is positive and even</code></div>
+                <p>Here, <code>No</code> is 10, which is greater than 0 AND is even, so the first <code>if</code> condition is true, and its block executes.</p>
+                <p>Conditional statements serve as the program's decision-making brain. The ability to translate real-world decisions into code is a common hurdle in programming. In Plurality, the program must decide if a vote is valid and which candidate(s) win. These are explicit decision points. Without a strong grasp of conditional logic, the program cannot adapt to different inputs (e.g., a valid versus an invalid vote) or different scenarios (e.g., a single winner versus a tie). This makes conditionals not just a syntactic feature but the very core of a program's ability to solve problems dynamically. An observation from external resources regarding the <code>vote()</code> function's <code>if..else</code> returning too early <a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a> directly points to a misunderstanding of how conditional flow should be structured within a loop to achieve the desired outcome. This highlights that correct conditional logic is paramount for accurate program behavior.</p>
+                <p>A subtle but critical point for the <code>vote</code> function  involves comparing candidate names. Unlike integers, strings in C are character arrays and *cannot* be compared directly using the <code>==</code> operator for equality. Using <code>==</code> with character arrays compares their memory addresses, not their content, which is a common beginner error. Instead, the <code>strcmp()</code> function (string compare) is required for this purpose. <code>strcmp()</code> returns <code>0</code> if the strings are identical.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a> Explicitly understanding the need for <code>strcmp()</code> and why direct <code>==</code> does not work for strings is a vital point that prevents a common, frustrating bug that can be difficult for a beginner to diagnose, thereby streamlining the problem-solving process for Plurality.</p>
+            </article>
+
+            <article id="lesson-functions" class="lesson-content hidden space-y-4 pt-4 border-t border-gray-200">
+                <h3 class="text-xl font-medium text-teal-600">Micro Lesson 5: Functions in C - Modular Solutions</h3>
+                <p>A function in C is a self-contained block of statements designed to perform a specific, well-defined task when called.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a> Functions are fundamental building blocks for organizing C programs and offer significant benefits:</p>
+                <ul>
+                    <li><strong>Modularity:</strong> They enable the breakdown of a large, complex problem (like an election simulation) into smaller, more manageable, and easier-to-understand sub-problems. This reduces cognitive load and enhances development efficiency.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></li>
+                    <li><strong>Reusability:</strong> A piece of code, once written as a function (e.g., a function to calculate a square <a href="#ref-20" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-20"><sup>[20]</sup></a>), can be called multiple times from different parts of the program without needing to be rewritten.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></li>
+                    <li><strong>Readability and Maintainability:</strong> Well-named functions make code easier to read, understand, and debug. Changes to a specific part of the logic can often be isolated within a single function.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></li>
+                </ul>
+                <h4 class="text-lg font-medium">Defining, Calling, and Understanding Function Parameters and Return Types</h4>
+                <p><strong>Function Definition:</strong> This involves specifying the function's <code>return_type</code>, its <code>function_name</code>, and a <code>parameter_list</code>.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></p>
+                <ul>
+                    <li><code>return_type</code>: Defines the data type of the value the function will send back to the caller. If a function does not return any value, its <code>return_type</code> should be <code>void</code>.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></li>
+                    <li><code>function_name</code>: A unique identifier for the function.</li>
+                    <li><code>parameter_list</code>: A comma-separated list of placeholder variables (parameters) that receive values (arguments) passed into the function when it is called.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></li>
+                </ul>
+                <p>The general syntax for a function definition is: <code>return_type function_name(parameter_list) { // Function body }</code>.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></p>
+                <p><strong>Function Call:</strong> To execute a function, its name is simply used, followed by parentheses, providing any necessary arguments: <code>function_name(arguments);</code>.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a> When a function is called, program control transfers to its body, and the statements within are executed.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></p>
+                <p><strong>Return Values:</strong> The <code>return</code> keyword is used to send a single value back from the function to the point where it was called.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a> The type of this returned value must match the <code>return_type</code> declared in the function definition.</p>
+                <p><strong>Parameters vs. Arguments:</strong> It is important to distinguish between "parameters" and "arguments." "Parameters" are the variables declared in the function's definition, acting as placeholders for incoming values. "Arguments" are the actual values passed during the function call.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a> The number, types, and order of arguments passed must precisely match the parameters defined in the function's signature.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></p>
+                <p>An example of a function that takes parameters and prints values:</p>
+                <div class="code-block"><code>#include &lt;stdio.h&gt;
+void printVal(int num, float real) {
+    printf("%d %f\n", num, real);
+}
+int main() {
+    int a = 3;
+    printVal(a, 1.5); // Calling the function with arguments
+    return 0;
+}
+// Output: 3 1.500000</code></div>
+                <p>When <code>printVal(a, 1.5)</code> is called, <code>a</code> (which is 3) is passed to <code>num</code>, and <code>1.5</code> is passed to <code>real</code>.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a></p>
+                <p>In the context of the Plurality assignment, these function concepts are directly applied to the <code>vote(string name)</code> and <code>print_winner()</code> functions that require implementation. The <code>vote</code> function has a <code>bool</code> return type to indicate the success or failure of a vote, and it accepts a <code>string name</code> as a parameter, representing the candidate voted for. The <code>print_winner</code> function has a <code>void</code> return type, as it simply prints output to the console and does not need to return a value, and it takes no parameters. These functions serve as the specific locations where the logic developed using loops, conditionals, and structure access will be implemented.</p>
+                <p>CS50 places a strong emphasis on breaking down problems into smaller, manageable pieces, and functions are the primary mechanism for achieving this modularity.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a> The Plurality problem, while seemingly straightforward, involves distinct logical steps: processing command-line arguments, obtaining the voter count, handling individual votes, and finally determining and printing the winners. If all this logic were confined to the <code>main</code> function, it would become overwhelming for a beginner. The fact that CS50 provides the function prototypes for <code>vote</code> and <code>print_winner</code>  is an implicit instruction that modularity is an expected and beneficial programming practice. This approach teaches a programmer not just *how* to write functions, but *why* they are essential for tackling larger, more complex programming problems, thereby instilling good software engineering habits from the outset.</p>
+                <p>A common source of errors for new programmers is misunderstanding how data flows into and out of functions, or failing to match function signatures precisely. The <code>vote</code> function  explicitly defines a <code>string name</code> parameter and a <code>bool</code> return type. If a programmer attempts to call <code>vote</code> without a string argument, or tries to return an <code>int</code> instead of a <code>bool</code>, the compiler will generate errors. Similarly, if the <code>name</code> parameter is not correctly used inside the function, the logic will fail. Understanding this "contract" of a function – the precise types and order of inputs it expects and the type of output it guarantees – is crucial for writing correct, bug-free code.<a href="#ref-7" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-7"><sup>[7]</sup></a> This reinforces the importance of precise function interfaces for predictable and reliable program behavior.</p>
+            </article>
+        </section>
+
+        <section id="concept-chart" class="content-section space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-teal-600 border-b pb-2">Plurality Concept Interconnection</h2>
+            <p class="text-lg leading-relaxed">This chart visually represents how key C concepts are utilized within the <code>vote</code> function of the Plurality assignment. Understanding these relationships is crucial for structuring your code effectively. The <code>vote</code> function needs to iterate through candidates, compare names, update vote counts, and return a status, all of which rely on these core C building blocks.</p>
+            <div class="chart-container my-4">
+                <canvas id="pluralityConceptChart"></canvas>
+            </div>
+            <p class="text-sm text-gray-600">This conceptual chart illustrates the main C programming elements involved in the <code>vote</code> function. For example, "Loops" are essential for iterating through the array of candidates. "Conditionals" (often with <code>strcmp</code>) are used to check if a voted name matches a candidate. "Struct Member Access" is how you retrieve a candidate's name for comparison and update their vote count. Finally, "Boolean Return" indicates whether the vote was successfully cast or not.</p>
+        </section>
+
+        <section id="solving-plurality" class="content-section space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-teal-600 border-b pb-2">Putting It All Together: Solving Plurality</h2>
+            <p class="text-lg leading-relaxed">This section provides step-by-step guidance for implementing the <code>vote</code> and <code>print_winner</code> functions in Plurality. We'll synthesize the concepts from the micro-lessons to build these functions logically. Follow the steps to understand the thought process.</p>
+
+            <div class="my-4">
+                <h3 class="text-xl font-medium text-teal-600 mb-2">Implementing the <code>vote</code> Function</h3>
+                <p>The <code>vote</code> function (<code>bool vote(string name)</code>) updates a candidate's vote if <code>name</code> matches, returning <code>true</code> for success, <code>false</code> otherwise.</p>
+                <div class="stepper mt-4 space-y-3">
+                    <button class="step-button bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded-md text-sm" data-step="vote-step-1">Step 1: Iterate</button>
+                    <div id="vote-step-1" class="step-content bg-stone-50 p-3 rounded border border-stone-200">
+                        <strong>1. Iterate through Candidates:</strong> Use a <code>for</code> loop to go through each candidate in the global <code>candidates</code> array. Iterate from <code>0</code> up to <code>candidate_count</code>. It is important to remember that <code>candidate_count</code> is a global variable already established by the CS50 framework.<a href="#ref-1" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-1"><sup>[1]</sup></a><a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a>
+                        <div class="code-block mt-2"><code>// Inside bool vote(string name)
+for (int i = 0; i < candidate_count; i++) {
+    // ... next steps inside loop ...
+}</code></div>
+                    </div>
+
+                    <button class="step-button bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded-md text-sm" data-step="vote-step-2">Step 2: Compare Names</button>
+                    <div id="vote-step-2" class="step-content bg-stone-50 p-3 rounded border border-stone-200">
+                        <strong>2. Compare Names (Crucial for Strings):</strong> Inside the loop, use <code>strcmp()</code> to compare the input <code>name</code> with <code>candidates[i].name</code>. If <code>strcmp()</code> returns <code>0</code>, the names match. <code>strcmp()</code> returns <code>0</code> when the two strings being compared are identical.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a>
+                        <div class="code-block mt-2"><code>// Inside the for loop
+if (strcmp(candidates[i].name, name) == 0) {
+    // ... names match, next steps ...
+}</code></div>
+                    </div>
+                    
+                    <button class="step-button bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded-md text-sm" data-step="vote-step-3">Step 3: Update & Return</button>
+                    <div id="vote-step-3" class="step-content bg-stone-50 p-3 rounded border border-stone-200">
+                        <strong>3. Update Votes & Return Success:</strong> If names match, increment <code>candidates[i].votes</code> and immediately <code>return true;</code>. This statement exits the function, signaling a successful vote and preventing further execution within <code>vote</code>.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a>
+                        <div class="code-block mt-2"><code>// Inside the if (strcmp(...) == 0) block
+candidates[i].votes++;
+return true; // Vote successful, exit function</code></div>
+                    </div>
+
+                    <button class="step-button bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded-md text-sm" data-step="vote-step-4">Step 4: Handle Invalid</button>
+                    <div id="vote-step-4" class="step-content bg-stone-50 p-3 rounded border border-stone-200">
+                        <strong>4. Handle Invalid Votes (After Checking All Candidates):</strong> If the <code>for</code> loop completes its execution without finding any matching candidate (meaning the <code>return true;</code> statement was never reached), it implies that the <code>name</code> provided was invalid. Therefore, *after* the <code>for</code> loop, <code>return false;</code> should be executed to indicate an invalid ballot.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a>
+                        <div class="code-block mt-2"><code>// After the for loop concludes
+return false; // No matching candidate found</code></div>
+                        <p class="mt-2 text-sm text-red-600"><strong>Common Pitfall:</strong> Avoid placing <code>else { return false; }</code> *inside* the loop, as it would make the function return after checking only the first non-matching candidate.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="my-6 pt-4 border-t">
+                <h3 class="text-xl font-medium text-teal-600 mb-2">Implementing the <code>print_winner</code> Function</h3>
+                <p>The <code>print_winner</code> function (<code>void print_winner(void)</code>) prints the name(s) of candidate(s) with the most votes.</p>
+                 <div class="stepper mt-4 space-y-3">
+                    <button class="step-button bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded-md text-sm" data-step="winner-step-1">Step 1: Find Max Votes</button>
+                    <div id="winner-step-1" class="step-content bg-stone-50 p-3 rounded border border-stone-200">
+                        <strong>1. Find the Maximum Vote Count (First Pass):</strong>
+                        <ul>
+                            <li>Initialize an integer variable, for example, <code>max_votes</code>, to <code>0</code> (or to the vote count of the first candidate, assuming there is at least one).</li>
+                            <li>Use a <code>for</code> loop to iterate through the <code>candidates</code> array.</li>
+                            <li>Inside this loop, use an <code>if</code> statement to compare the current candidate's votes (<code>candidates[i].votes</code>) with the <code>max_votes</code> found so far. If <code>candidates[i].votes</code> is greater than <code>max_votes</code>, update <code>max_votes = candidates[i].votes;</code>.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a></li>
+                        </ul>
+                        <div class="code-block mt-2"><code>// Inside void print_winner(void)
+int max_votes = 0;
+// Assuming candidate_count > 0, could initialize with candidates[0].votes
+// Or, more robustly, if candidate_count > 0, max_votes = candidates[0].votes;
+// then loop from i = 1. For simplicity here, starting with 0.
+
+for (int i = 0; i < candidate_count; i++) {
+    if (candidates[i].votes > max_votes) {
+        max_votes = candidates[i].votes;
+    }
+}</code></div>
+                    </div>
+                    <button class="step-button bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded-md text-sm" data-step="winner-step-2">Step 2: Print Winners</button>
+                    <div id="winner-step-2" class="step-content bg-stone-50 p-3 rounded border border-stone-200">
+                        <strong>2. Print All Candidates with Maximum Votes (Second Pass):</strong>
+                        <ul>
+                            <li>Once the first loop has completed, the <code>max_votes</code> variable will hold the highest vote count achieved by any candidate.</li>
+                            <li>Now, use a *second* <code>for</code> loop to iterate through the <code>candidates</code> array *again*.</li>
+                            <li>Inside this second loop, use an <code>if</code> statement to check if the current candidate's vote count (<code>candidates[i].votes</code>) is *equal* to <code>max_votes</code>.</li>
+                            <li>If this condition is true, print the candidate's name followed by a newline character: <code>printf("%s\n", candidates[i].name);</code>.</li>
+                        </ul>
+                        <div class="code-block mt-2"><code>// Still inside void print_winner(void), after finding max_votes
+for (int i = 0; i < candidate_count; i++) {
+    if (candidates[i].votes == max_votes) {
+        printf("%s\n", candidates[i].name);
+    }
+}</code></div>
+                        <p class="mt-2 text-sm text-orange-600"><strong>Why two passes?</strong> You need to know the absolute maximum number of votes before you can identify all candidates who achieved that maximum, especially to handle ties correctly.<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="beyond-plurality" class="content-section space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-teal-600 border-b pb-2">Beyond Plurality: Continued Growth in C</h2>
+            <p class="text-lg leading-relaxed">Mastering C is an ongoing journey. This section offers tips for effective debugging, the importance of consistent practice, and how to keep building on the C fundamentals you've learned here. These strategies will help you tackle more complex programming challenges in CS50 and beyond.</p>
+            <p>Effective debugging is a critical skill. It is advisable to read compiler error messages carefully, as they often provide precise clues regarding the nature and location of issues. Strategic use of <code>printf</code> statements can be invaluable for tracing the values of variables at different points in the program and understanding the flow of execution, serving as a simple yet highly effective debugging technique. Furthermore, adopting a step-by-step thinking approach, as suggested by external resources, is highly beneficial: "To solve simple programming problems such as these, think of the steps you would take to solve the problem with pen and paper, decompose the steps into very basic tasks and translate these elementary steps into C code".<a href="#ref-4" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-4"><sup>[4]</sup></a> This pre-coding planning can significantly reduce debugging time by identifying logical flaws before writing code. Leveraging tools provided by the CS50 environment, such as <code>check50</code> for automated testing and <code>debug50</code> (or GDB) for step-by-step code execution and variable inspection, can also streamline the debugging process.</p>
+            <p>Consistent hands-on practice is paramount to mastering C programming. Like any skill, proficiency improves with diligent application. It is recommended to explore other CS50 problem sets or engage with simple C programming exercises, such as checking for prime numbers, finding the largest element in an array, or converting decimal to binary.<a href="#ref-20" target="_blank" class="text-teal-600 hover:underline" data-ref-id="ref-20"><sup>[20]</sup></a> As new problems are encountered, a programmer should continue to break them down into the core concepts covered in these micro lessons. The ability to identify the appropriate application of loops, structures, conditionals, and functions within a larger problem is a hallmark of a developing programmer.</p>
+        </section>
+
+        <section id="conclusion" class="content-section space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-teal-600 border-b pb-2">Conclusion: Your Path to C Proficiency</h2>
+            <p class="text-lg leading-relaxed">This interactive guide aimed to solidify your understanding of key C concepts through focused micro-lessons, all contextualized by the CS50 Plurality assignment. By working through these materials, you've hopefully gained practical skills in data organization, repetition, decision-making, and modular design in C.</p>
+            <p>A stronger foundation in C has been established, along with the analytical tools necessary to approach future coding challenges with greater confidence and efficiency. Every struggle overcome, every concept clarified, and every line of code successfully implemented contributes to growing expertise. The journey of learning programming is continuous, and each step forward, whether it involves writing new code, fixing a bug, or mastering a new concept, brings a programmer closer to true C proficiency.</p>
+            <p class="mt-4 font-medium">Keep practicing, keep exploring, and keep building!</p>
+        </section>
+
+        <section id="references" class="content-section space-y-4 bg-white p-6 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold text-teal-600 border-b pb-2">References</h2>
+            <ul class="list-disc list-inside space-y-2 text-stone-700">
+                <li id="ref-1"><a href="https://cs50.harvard.edu/x/2024/psets/3/plurality/" target="_blank" class="text-teal-600 hover:underline"><sup>[1]</sup></a> CS50 Plurality Problem Description (refers to the assignment details provided by the user in the initial prompt).</li>
+                <li id="ref-2"><a href="https://www.geeksforgeeks.org/loops-in-c/" target="_blank" class="text-teal-600 hover:underline"><sup>[2]</sup></a> GeeksforGeeks - Loops in C.</li>
+                <li id="ref-3"><a href="https://www.programiz.com/c-programming/c-loops/" target="_blank" class="text-teal-600 hover:underline"><sup>[3]</sup></a> Programiz - C Loops.</li>
+                <li id="ref-4"><a href="https://cs50.stackexchange.com/questions/21927/cs50-pset3-plurality-vote-function-returns-false-after-first-candidate" target="_blank" class="text-teal-600 hover:underline"><sup>[4]</sup></a> CS50 StackExchange - CS50 Pset3 Plurality vote function returns false after first candidate.</li>
+                <li id="ref-5"><a href="https://www.programiz.com/c-programming/c-if-else-statement/" target="_blank" class="text-teal-600 hover:underline"><sup>[5]</sup></a> Programiz - C if...else Statement.</li>
+                <li id="ref-6"><a href="https://www.geeksforgeeks.org/decision-making-in-c-if-if-else-nested-if-else-if-else-if-ladder/" target="_blank" class="text-teal-600 hover:underline"><sup>[6]</sup></a> GeeksforGeeks - Decision Making in C (if, if-else, Nested if-else, if-else-if ladder).</li>
+                <li id="ref-7"><a href="https://www.programiz.com/c-programming/c-functions/" target="_blank" class="text-teal-600 hover:underline"><sup>[7]</sup></a> Programiz - C Functions.</li>
+                <li id="ref-8"><a href="https://www.geeksforgeeks.org/c-for-loop/" target="_blank" class="text-teal-600 hover:underline"><sup>[8]</sup></a> GeeksforGeeks - C For Loop.</li>
+                <li id="ref-9"><a href="https://www.tutorialspoint.com/cprogramming/c_loops.htm" target="_blank" class="text-teal-600 hover:underline"><sup>[9]</sup></a> TutorialsPoint - C - Loops.</li>
+                <li id="ref-10"><a href="https://www.w3schools.com/c/c_for_loop.php" target="_blank" class="text-teal-600 hover:underline"><sup>[10]</sup></a> W3Schools - C For Loop.</li>
+                <li id="ref-11"><a href="https://www.programiz.com/c-programming/c-arrays/" target="_blank" class="text-teal-600 hover:underline"><sup>[11]</sup></a> Programiz - C Arrays.</li>
+                <li id="ref-12"><a href="https://www.geeksforgeeks.org/c-while-loop/" target="_blank" class="text-teal-600 hover:underline"><sup>[12]</sup></a> GeeksforGeeks - C while loop.</li>
+                <li id="ref-13"><a href="https://www.programiz.com/c-programming/c-do-while-loop/" target="_blank" class="text-teal-600 hover:underline"><sup>[13]</sup></a> Programiz - C do...while Loop.</li>
+                <li id="ref-14"><a href="https://www.geeksforgeeks.org/c-do-while-loop/" target="_blank" class="text-teal-600 hover:underline"><sup>[14]</sup></a> GeeksforGeeks - C do-while loop.</li>
+                <li id="ref-15"><a href="https://www.programiz.com/c-programming/c-structures/" target="_blank" class="text-teal-600 hover:underline"><sup>[15]</sup></a> Programiz - C Structures.</li>
+                <li id="ref-16"><a href="https://www.geeksforgeeks.org/structures-in-c/" target="_blank" class="text-teal-600 hover:underline"><sup>[16]</sup></a> GeeksforGeeks - Structures in C.</li>
+                <li id="ref-17"><a href="https://www.tutorialspoint.com/cprogramming/c_structures.htm" target="_blank" class="text-teal-600 hover:underline"><sup>[17]</sup></a> TutorialsPoint - C - Structures.</li>
+                <li id="ref-18"><a href="https://www.geeksforgeeks.org/array-of-structures-in-c/" target="_blank" class="text-teal-600 hover:underline"><sup>[18]</sup></a> GeeksforGeeks - Array of Structures in C.</li>
+                <li id="ref-19"><a href="https://www.tutorialspoint.com/cprogramming/c_arrays_of_structures.htm" target="_blank" class="text-teal-600 hover:underline"><sup>[19]</sup></a> TutorialsPoint - C - Arrays of Structures.</li>
+                <li id="ref-20"><a href="https://www.geeksforgeeks.org/c-programming-examples/" target="_blank" class="text-teal-600 hover:underline"><sup>[20]</sup></a> GeeksforGeeks - C Programs.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="bg-stone-800 text-stone-300 text-center p-6 mt-12">
+        <p>&copy; CS50 Plurality Micro-Lessons SPA. Adapted from educational content.</p>
+    </footer>
+
+    <div id="reference-tooltip" class="hidden"></div>
+
+    <script>
+        const navButtons = document.querySelectorAll('.nav-button');
+        const contentSections = document.querySelectorAll('.content-section');
+        const subNavButtons = document.querySelectorAll('.sub-nav-button');
+        const lessonContents = document.querySelectorAll('.lesson-content');
+        const stepperButtons = document.querySelectorAll('.step-button');
+        const stepContents = document.querySelectorAll('.step-content');
+        const referenceLinks = document.querySelectorAll('a[data-ref-id]');
+        const tooltip = document.getElementById('reference-tooltip');
+
+        const referencesData = {};
+        document.querySelectorAll('#references li').forEach(li => {
+            const id = li.id;
+            // Get only the text content, excluding the <sup> and <a> tags within the <li>
+            let text = li.textContent;
+            const supTag = li.querySelector('sup');
+            if (supTag) {
+                text = text.replace(supTag.textContent, '').trim();
+            }
+            referencesData[id] = text;
+        });
+
+        function showSection(targetId) {
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === targetId) {
+                    section.classList.add('active');
+                }
+            });
+            navButtons.forEach(button => {
+                button.classList.remove('active');
+                if (button.dataset.target === targetId) {
+                    button.classList.add('active');
+                }
+            });
+            if (targetId === 'c-concepts') {
+                const activeLesson = document.querySelector('.lesson-content.active-lesson');
+                if (!activeLesson && lessonContents.length > 0) {
+                    showLesson(lessonContents[0].id);
+                } else if (activeLesson) {
+                    showLesson(activeLesson.id);
+                }
+            } else {
+                lessonContents.forEach(lesson => lesson.classList.remove('active-lesson', 'block'));
+                lessonContents.forEach(lesson => lesson.classList.add('hidden'));
+                subNavButtons.forEach(btn => btn.classList.remove('bg-teal-700'));
+                subNavButtons.forEach(btn => btn.classList.add('bg-teal-500'));
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function showLesson(targetId) {
+            lessonContents.forEach(lesson => {
+                lesson.classList.remove('active-lesson', 'block');
+                lesson.classList.add('hidden');
+                if (lesson.id === targetId) {
+                    lesson.classList.add('active-lesson', 'block');
+                    lesson.classList.remove('hidden');
+                }
+            });
+            subNavButtons.forEach(button => {
+                button.classList.remove('bg-teal-700');
+                button.classList.add('bg-teal-500');
+                if (button.dataset.target === targetId) {
+                    button.classList.add('bg-teal-700');
+                    button.classList.remove('bg-teal-500');
+                }
+            });
+        }
+        
+        function showStep(targetId) {
+            stepContents.forEach(content => {
+                content.classList.remove('active-step');
+                if (content.id === targetId) {
+                    content.classList.add('active-step');
+                }
+            });
+        }
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                showSection(button.dataset.target);
+            });
+        });
+
+        subNavButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showLesson(button.dataset.target);
+            });
+        });
+        
+        stepperButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetStepId = button.dataset.step;
+                const targetStepElement = document.getElementById(targetStepId);
+                if (targetStepElement) {
+                    if (targetStepElement.classList.contains('active-step')) {
+                        targetStepElement.classList.remove('active-step');
+                    } else {
+                        showStep(targetStepId);
+                    }
+                }
+            });
+        });
+
+        referenceLinks.forEach(link => {
+            link.addEventListener('mouseover', (e) => {
+                const refId = link.dataset.refId;
+                const refText = referencesData[refId];
+                if (refText) {
+                    tooltip.textContent = refText;
+                    tooltip.classList.add('show');
+                    tooltip.classList.remove('hidden');
+
+                    const linkRect = link.getBoundingClientRect();
+                    const bodyRect = document.body.getBoundingClientRect();
+
+                    // Position tooltip relative to the link, slightly above or below
+                    let top = linkRect.top + window.scrollY - tooltip.offsetHeight - 10; // 10px above
+                    let left = linkRect.left + window.scrollX + (linkRect.width / 2) - (tooltip.offsetWidth / 2);
+
+                    // Ensure tooltip stays within viewport
+                    if (top < window.scrollY) { // If it goes above viewport, place below
+                        top = linkRect.bottom + window.scrollY + 10;
+                    }
+                    if (left < window.scrollX) { // If it goes left of viewport, align left
+                        left = window.scrollX + 10;
+                    }
+                    if (left + tooltip.offsetWidth > window.innerWidth + window.scrollX) { // If it goes right, align right
+                        left = window.innerWidth + window.scrollX - tooltip.offsetWidth - 10;
+                    }
+
+                    tooltip.style.top = `${top}px`;
+                    tooltip.style.left = `${left}px`;
+                }
+            });
+
+            link.addEventListener('mouseout', () => {
+                tooltip.classList.remove('show');
+                tooltip.classList.add('hidden');
+            });
+        });
+
+
+        showSection('intro');
+
+        const ctx = document.getElementById('pluralityConceptChart').getContext('2d');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Loops', 'Conditionals (strcmp)', 'Struct Member Access', 'Boolean Return'],
+                    datasets: [{
+                        label: 'Key C Concepts in `vote` function',
+                        data: [4, 4, 3, 2],
+                        backgroundColor: [
+                            'rgba(20, 184, 166, 0.6)',
+                            'rgba(13, 148, 136, 0.6)',
+                            'rgba(15, 118, 110, 0.6)',
+                            'rgba(17, 94, 89, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(20, 184, 166, 1)',
+                            'rgba(13, 148, 136, 1)',
+                            'rgba(15, 118, 110, 1)',
+                            'rgba(17, 94, 89, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: 'Conceptual Presence/Importance'
+                            }
+                        },
+                        x: {
+                             title: {
+                                display: true,
+                                text: 'C Concepts'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' (conceptual score)';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            console.error("Failed to get context for pluralityConceptChart");
+        }
+
+    </script>
+</body>
+</html>
